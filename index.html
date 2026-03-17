@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard EPG 2026 — UNA Puno</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cr: #801601; --cr2: #a82002; --cr3: #5a1001;
+  --or: #D95604; --or2: #f07030; --or3: #a03a00;
+  --gn: #018030; --gn2: #02a842; --gn3: #005520;
+  --bl: #0a4880; --bl2: #1a6ab0;
+  --bg: #0f0f13;
+  --bg2: #16161c;
+  --bg3: #1e1e26;
+  --bg4: #252530;
+  --bg5: #2e2e3c;
+  --bd: rgba(255,255,255,0.07);
+  --bd2: rgba(255,255,255,0.12);
+  --tx: #f0ede8;
+  --tx2: #b0a898;
+  --tx3: #7a7060;
+  --sh: 0 4px 24px rgba(0,0,0,0.4);
+  --sh2: 0 8px 40px rgba(0,0,0,0.6);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;}
+
+/* ─── SIDEBAR ─────────────────────────────────────── */
+#sidebar{
+  position:fixed;top:0;left:0;width:240px;height:100vh;
+  background:var(--bg2);border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;z-index:200;
+  transition:width 0.3s;overflow:hidden;
+}
+#sidebar.collapsed{width:60px;}
+#sidebar.collapsed .sidebar-label{display:none;}
+#sidebar.collapsed .sidebar-logo-text{display:none;}
+#sidebar.collapsed .filter-section-title{display:none;}
+
+.sidebar-top{
+  padding:20px 16px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;gap:12px;
+}
+.sidebar-logo-icon{
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--cr),var(--or));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;font-weight:800;color:#fff;
+}
+.sidebar-logo-text{
+  flex:1;min-width:0;
+}
+.sidebar-logo-text .t1{font-size:0.75rem;font-weight:700;color:var(--tx);white-space:nowrap;}
+.sidebar-logo-text .t2{font-size:0.62rem;color:var(--tx3);white-space:nowrap;}
+
+#toggle-sidebar{
+  width:28px;height:28px;border-radius:8px;border:1px solid var(--bd2);
+  background:transparent;cursor:pointer;color:var(--tx2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all 0.2s;font-size:0.9rem;
+}
+#toggle-sidebar:hover{background:var(--bg4);color:var(--tx);}
+
+.sidebar-nav{
+  padding:12px 8px;border-bottom:1px solid var(--bd);
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:8px;cursor:pointer;
+  font-size:0.78rem;font-weight:500;color:var(--tx2);
+  transition:all 0.2s;white-space:nowrap;
+}
+.nav-item:hover{background:var(--bg4);color:var(--tx);}
+.nav-item.active{background:rgba(128,22,1,0.2);color:var(--or);border:1px solid rgba(217,86,4,0.2);}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;}
+.sidebar-label{font-size:0.78rem;}
+
+.filter-panel{flex:1;overflow-y:auto;padding:12px 8px;scrollbar-width:thin;scrollbar-color:var(--bg5) transparent;}
+
+.filter-section-title{
+  font-size:0.62rem;font-weight:700;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--tx3);
+  padding:8px 8px 4px;
+}
+
+.filter-group{margin-bottom:14px;}
+
+/* Slicer chips */
+.slicer{display:flex;flex-wrap:wrap;gap:5px;padding:4px 4px;}
+.slice-chip{
+  padding:4px 10px;border-radius:6px;font-size:0.7rem;font-weight:500;
+  border:1px solid var(--bd2);background:var(--bg3);color:var(--tx2);
+  cursor:pointer;transition:all 0.18s;white-space:nowrap;
+}
+.slice-chip:hover{border-color:var(--or);color:var(--or);}
+.slice-chip.active{background:var(--cr);border-color:var(--cr);color:#fff;}
+
+/* Range slider */
+.range-wrap{padding:4px 8px;}
+.range-row{display:flex;justify-content:space-between;font-size:0.65rem;color:var(--tx3);margin-bottom:6px;}
+input[type=range]{
+  -webkit-appearance:none;width:100%;height:4px;border-radius:2px;
+  background:var(--bg5);outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--or);cursor:pointer;border:2px solid var(--bg2);
+}
+
+/* Search input in sidebar */
+.sb-search{
+  display:flex;align-items:center;gap:6px;
+  background:var(--bg3);border:1px solid var(--bd2);border-radius:8px;
+  padding:6px 10px;margin:4px 8px;
+}
+.sb-search input{background:transparent;border:none;outline:none;font-family:'Sora',sans-serif;font-size:0.72rem;color:var(--tx);width:100%;}
+.sb-search svg{width:13px;height:13px;stroke:var(--tx3);fill:none;stroke-width:2;flex-shrink:0;}
+
+/* Reset btn */
+.reset-btn{
+  margin:8px;width:calc(100% - 16px);padding:8px;border-radius:8px;
+  background:var(--bg3);border:1px solid var(--bd2);color:var(--tx2);
+  font-family:'Sora',sans-serif;font-size:0.72rem;cursor:pointer;
+  transition:all 0.2s;font-weight:500;
+}
+.reset-btn:hover{background:var(--bg5);color:var(--tx);}
+
+/* ─── MAIN ─────────────────────────────────────────── */
+#main{margin-left:240px;transition:margin-left 0.3s;min-height:100vh;display:flex;flex-direction:column;}
+body.collapsed #main{margin-left:60px;}
+
+/* ─── TOP BAR ────────────────────────────────────── */
+#topbar{
+  height:56px;background:var(--bg2);border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;position:sticky;top:0;z-index:100;
+}
+.topbar-left{display:flex;align-items:center;gap:16px;}
+.topbar-breadcrumb{font-size:0.78rem;color:var(--tx2);}
+.topbar-breadcrumb span{color:var(--tx);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.topbar-tag{
+  padding:4px 12px;border-radius:100px;font-size:0.68rem;font-weight:600;
+  background:rgba(128,22,1,0.2);border:1px solid rgba(217,86,4,0.3);color:var(--or);
+}
+.topbar-date{font-size:0.72rem;color:var(--tx3);}
+
+/* ─── CONTENT ─────────────────────────────────────── */
+#content{flex:1;padding:24px;display:flex;flex-direction:column;gap:20px;}
+
+/* ─── KPI ROW ─────────────────────────────────────── */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;}
+@media(max-width:1400px){.kpi-row{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr);}}
+
+.kpi{
+  background:var(--bg2);border:1px solid var(--bd);border-radius:12px;
+  padding:18px 16px;position:relative;overflow:hidden;
+  transition:transform 0.2s,box-shadow 0.2s;cursor:default;
+}
+.kpi:hover{transform:translateY(-3px);box-shadow:var(--sh2);}
+.kpi::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
+  border-radius:0 0 12px 12px;
+}
+.kpi.k1::after{background:var(--cr);}
+.kpi.k2::after{background:var(--or);}
+.kpi.k3::after{background:var(--gn);}
+.kpi.k4::after{background:var(--bl);}
+.kpi.k5::after{background:#8b5cf6;}
+.kpi.k6::after{background:#06b6d4;}
+
+.kpi-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.kpi-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.kpi.k1 .kpi-icon{background:rgba(128,22,1,0.2);}
+.kpi.k2 .kpi-icon{background:rgba(217,86,4,0.2);}
+.kpi.k3 .kpi-icon{background:rgba(1,128,48,0.2);}
+.kpi.k4 .kpi-icon{background:rgba(10,72,128,0.2);}
+.kpi.k5 .kpi-icon{background:rgba(139,92,246,0.2);}
+.kpi.k6 .kpi-icon{background:rgba(6,182,212,0.2);}
+.kpi-badge{font-size:0.62rem;font-weight:600;padding:2px 8px;border-radius:4px;}
+.kpi-val{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;line-height:1;color:var(--tx);}
+.kpi-lbl{font-size:0.68rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.08em;margin-top:4px;}
+.kpi-sub{font-size:0.72rem;color:var(--tx2);margin-top:6px;padding-top:6px;border-top:1px solid var(--bd);}
+
+/* ─── GRID LAYOUTS ──────────────────────────────────── */
+.row{display:grid;gap:16px;}
+.row.c2{grid-template-columns:1fr 1fr;}
+.row.c3{grid-template-columns:1fr 1fr 1fr;}
+.row.c21{grid-template-columns:2fr 1fr;}
+.row.c12{grid-template-columns:1fr 2fr;}
+.row.c211{grid-template-columns:2fr 1fr 1fr;}
+@media(max-width:1100px){.row.c2,.row.c3,.row.c21,.row.c12,.row.c211{grid-template-columns:1fr;}}
+
+/* ─── PANEL ─────────────────────────────────────────── */
+.panel{
+  background:var(--bg2);border:1px solid var(--bd);border-radius:14px;
+  overflow:hidden;display:flex;flex-direction:column;
+}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px 12px;border-bottom:1px solid var(--bd);gap:12px;flex-wrap:wrap;
+}
+.panel-title{
+  font-size:0.82rem;font-weight:700;color:var(--tx);
+  display:flex;align-items:center;gap:8px;
+}
+.panel-title::before{
+  content:'';display:block;width:3px;height:14px;border-radius:2px;background:var(--or);
+}
+.panel-desc{font-size:0.68rem;color:var(--tx3);margin-top:2px;}
+.panel-body{padding:20px;flex:1;}
+.panel-body.np{padding:0;}
+
+/* ─── CHART WRAPPERS ─────────────────────────────────── */
+.cw{position:relative;}
+.cw-200{height:200px;}
+.cw-260{height:260px;}
+.cw-320{height:320px;}
+.cw-400{height:400px;}
+.cw-500{height:500px;}
+.cw-560{height:560px;}
+
+/* ─── CONVERSION RINGS (BIG) ─────────────────────────── */
+.conv-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
+  padding:24px;
+}
+.conv-item{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.ring-svg{width:160px;height:160px;}
+circle.ring-track{fill:none;stroke:var(--bg4);stroke-width:10;}
+circle.ring-fill{
+  fill:none;stroke-width:10;stroke-linecap:round;
+  transition:stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1);
+}
+.ring-center{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;pointer-events:none;
+}
+.ring-pct{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;line-height:1;}
+.ring-wrap{position:relative;width:160px;height:160px;}
+.conv-info{text-align:center;}
+.conv-label{font-size:0.75rem;font-weight:700;color:var(--tx);margin-bottom:4px;}
+.conv-nums{font-size:0.68rem;color:var(--tx3);}
+.conv-bar{
+  width:100%;height:6px;background:var(--bg4);border-radius:3px;margin-top:8px;overflow:hidden;
+}
+.conv-bar-fill{height:100%;border-radius:3px;transition:width 1.4s cubic-bezier(.4,0,.2,1);}
+
+/* ─── TABLE ─────────────────────────────────────────── */
+.tbl-controls{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  border-bottom:1px solid var(--bd);flex-wrap:wrap;background:var(--bg3);
+}
+.tbl-search{
+  display:flex;align-items:center;gap:6px;
+  background:var(--bg4);border:1px solid var(--bd2);border-radius:8px;
+  padding:6px 12px;flex:1;min-width:180px;max-width:320px;
+}
+.tbl-search svg{width:13px;height:13px;stroke:var(--tx3);fill:none;stroke-width:2;flex-shrink:0;}
+.tbl-search input{background:transparent;border:none;outline:none;font-family:'Sora',sans-serif;font-size:0.75rem;color:var(--tx);width:100%;}
+.tbl-search input::placeholder{color:var(--tx3);}
+.tbl-filter-pills{display:flex;gap:6px;flex-wrap:wrap;}
+.tbl-pill{
+  padding:5px 12px;border-radius:6px;font-size:0.7rem;font-weight:600;
+  border:1px solid var(--bd2);background:var(--bg4);color:var(--tx2);
+  cursor:pointer;transition:all 0.18s;white-space:nowrap;
+}
+.tbl-pill:hover{border-color:var(--or);color:var(--or);}
+.tbl-pill.act{background:var(--cr);border-color:var(--cr);color:#fff;}
+.tbl-count{font-size:0.68rem;color:var(--tx3);margin-left:auto;white-space:nowrap;}
+.tbl-sort-select{
+  background:var(--bg4);border:1px solid var(--bd2);border-radius:8px;
+  color:var(--tx2);font-family:'Sora',sans-serif;font-size:0.7rem;padding:5px 10px;outline:none;
+}
+
+table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+thead th{
+  padding:10px 14px;text-align:left;font-size:0.66rem;text-transform:uppercase;
+  letter-spacing:0.1em;color:var(--tx3);font-weight:700;
+  background:var(--bg3);border-bottom:1px solid var(--bd);cursor:pointer;
+  white-space:nowrap;user-select:none;position:sticky;top:0;z-index:10;
+}
+thead th:hover{color:var(--tx2);}
+thead th.asc::after{content:' ↑';color:var(--or);}
+thead th.desc::after{content:' ↓';color:var(--or);}
+tbody tr{border-bottom:1px solid var(--bd);transition:background 0.15s;}
+tbody tr:hover{background:var(--bg3);}
+tbody td{padding:10px 14px;vertical-align:middle;}
+
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 9px;border-radius:5px;font-size:0.65rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.06em;
+}
+.badge.doc{background:rgba(128,22,1,0.2);color:#f9887a;border:1px solid rgba(128,22,1,0.3);}
+.badge.mae{background:rgba(10,72,128,0.2);color:#7ab8f5;border:1px solid rgba(10,72,128,0.3);}
+.badge .dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+
+.mini-bar{display:flex;align-items:center;gap:8px;}
+.mini-track{flex:1;height:5px;background:var(--bg5);border-radius:3px;overflow:hidden;}
+.mini-fill{height:100%;border-radius:3px;}
+.mini-pct{font-size:0.7rem;font-weight:700;min-width:34px;text-align:right;}
+
+.tbl-wrap{overflow:auto;max-height:560px;scrollbar-width:thin;scrollbar-color:var(--bg5) transparent;}
+
+/* pagination */
+.pagination{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-top:1px solid var(--bd);flex-wrap:wrap;gap:8px;
+}
+.pg-info{font-size:0.7rem;color:var(--tx3);}
+.pg-btns{display:flex;gap:4px;}
+.pg-btn{
+  min-width:30px;height:28px;border-radius:6px;border:1px solid var(--bd2);
+  background:var(--bg3);cursor:pointer;font-size:0.72rem;color:var(--tx2);
+  display:flex;align-items:center;justify-content:center;transition:all 0.18s;padding:0 8px;
+  font-family:'Sora',sans-serif;
+}
+.pg-btn:hover:not(:disabled){border-color:var(--or);color:var(--or);}
+.pg-btn.cur{background:var(--cr);border-color:var(--cr);color:#fff;}
+.pg-btn:disabled{opacity:0.3;cursor:not-allowed;}
+
+/* ─── TOP LISTS ─────────────────────────────────────── */
+.top-list{list-style:none;}
+.top-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 20px;border-bottom:1px solid var(--bd);
+  transition:background 0.15s;
+}
+.top-item:hover{background:var(--bg3);}
+.top-item:last-child{border-bottom:none;}
+.top-rank{
+  font-family:'Playfair Display',serif;font-size:0.9rem;font-weight:700;
+  color:var(--bg5);min-width:22px;text-align:center;
+}
+.top-rank.r1{color:var(--or);}
+.top-rank.r2{color:var(--tx2);}
+.top-rank.r3{color:var(--or3);}
+.top-info{flex:1;min-width:0;}
+.top-name{font-size:0.78rem;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.top-prog{font-size:0.65rem;color:var(--tx3);}
+.top-val{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:var(--or);}
+
+/* ─── SCATTER / DATA VIZ ─────────────────────────────── */
+.legend-row{display:flex;gap:16px;flex-wrap:wrap;padding:0 20px 12px;justify-content:center;}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:0.68rem;color:var(--tx2);}
+.leg-dot{width:8px;height:8px;border-radius:50%;}
+
+/* ─── ACTIVE FILTERS CHIP BAR ────────────────────────── */
+#active-filters{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:8px 24px;background:var(--bg3);border-bottom:1px solid var(--bd);
+  min-height:40px;
+}
+.af-label{font-size:0.65rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap;}
+.af-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:5px;font-size:0.68rem;font-weight:500;
+  background:rgba(217,86,4,0.15);border:1px solid rgba(217,86,4,0.25);color:var(--or);
+}
+.af-chip .rm{cursor:pointer;font-size:0.75rem;opacity:0.7;}
+.af-chip .rm:hover{opacity:1;}
+.af-empty{font-size:0.72rem;color:var(--tx3);font-style:italic;}
+
+/* ─── SCROLLBAR ─────────────────────────────────────── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:3px;}
+
+/* ─── SECTION TABS ──────────────────────────────────── */
+.section-tabs{
+  display:flex;gap:4px;padding:0 24px;
+  border-bottom:1px solid var(--bd);background:var(--bg2);
+}
+.s-tab{
+  padding:12px 18px;font-size:0.75rem;font-weight:600;color:var(--tx2);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;
+  white-space:nowrap;
+}
+.s-tab:hover{color:var(--tx);}
+.s-tab.active{color:var(--or);border-bottom-color:var(--or);}
+
+.tab-content{display:none;}
+.tab-content.active{display:flex;flex-direction:column;gap:20px;padding:24px;}
+
+/* ─── RESPONSIVE ─────────────────────────────────────── */
+@media(max-width:768px){
+  #sidebar{width:0;border:none;}
+  #main{margin-left:0;}
+  .kpi-row{grid-template-columns:1fr 1fr;}
+  .conv-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sidebar-top">
+    <div class="sidebar-logo-icon">EPG</div>
+    <div class="sidebar-logo-text">
+      <div class="t1">UNA Puno · EPG</div>
+      <div class="t2">Dashboard Admisión 2026</div>
+    </div>
+    <button id="toggle-sidebar" onclick="toggleSidebar()">‹</button>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="nav-item active" onclick="switchTab('overview')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="sidebar-label">Resumen General</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('programs')">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span class="sidebar-label">Análisis Programas</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('detail')">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span class="sidebar-label">Detalle por Mención</span>
+    </div>
+  </div>
+
+  <div class="filter-panel">
+    <div class="filter-section-title">🔍 Filtros de Datos</div>
+
+    <!-- Tipo -->
+    <div class="filter-group">
+      <div class="filter-section-title" style="color:var(--tx2)">Tipo de Programa</div>
+      <div class="slicer" id="fl-tipo">
+        <div class="slice-chip active" data-v="all">Todos</div>
+        <div class="slice-chip" data-v="Maestria">Maestría</div>
+        <div class="slice-chip" data-v="Doctorado">Doctorado</div>
+      </div>
+    </div>
+
+    <!-- Actividad -->
+    <div class="filter-group">
+      <div class="filter-section-title" style="color:var(--tx2)">Actividad</div>
+      <div class="slicer" id="fl-actividad">
+        <div class="slice-chip active" data-v="all">Todos</div>
+        <div class="slice-chip" data-v="activo">Con postulantes</div>
+        <div class="slice-chip" data-v="inactivo">Sin postulantes</div>
+      </div>
+    </div>
+
+    <!-- Tasa -->
+    <div class="filter-group">
+      <div class="filter-section-title" style="color:var(--tx2)">Rango Tasa de Admisión</div>
+      <div class="slicer" id="fl-tasa">
+        <div class="slice-chip active" data-v="all">Todas</div>
+        <div class="slice-chip" data-v="alta">Alta ≥60%</div>
+        <div class="slice-chip" data-v="media">Media 30–59%</div>
+        <div class="slice-chip" data-v="baja">Baja &lt;30%</div>
+      </div>
+    </div>
+
+    <!-- Programa search -->
+    <div class="filter-group">
+      <div class="filter-section-title" style="color:var(--tx2)">Buscar Programa</div>
+      <div class="sb-search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="sb-prog-search" placeholder="Nombre del programa…">
+      </div>
+    </div>
+
+    <!-- Slider preinscritos -->
+    <div class="filter-group">
+      <div class="filter-section-title" style="color:var(--tx2)">Mín. Preinscritos</div>
+      <div class="range-wrap">
+        <div class="range-row">
+          <span>0</span>
+          <span id="range-val" style="color:var(--or);font-weight:600">≥ 0</span>
+          <span>97</span>
+        </div>
+        <input type="range" id="fl-minpre" min="0" max="97" value="0">
+      </div>
+    </div>
+
+    <!-- Programas específicos -->
+    <div class="filter-group">
+      <div class="filter-section-title" style="color:var(--tx2)">Programas Destacados</div>
+      <div class="slicer" id="fl-prog">
+        <div class="slice-chip active" data-v="all">Todos</div>
+        <div class="slice-chip" data-v="Educación">Educación</div>
+        <div class="slice-chip" data-v="Derecho">Derecho</div>
+        <div class="slice-chip" data-v="Contabilidad y Administración">Contabilidad</div>
+        <div class="slice-chip" data-v="Salud Pública">Salud Pública</div>
+        <div class="slice-chip" data-v="Ciencias Sociales">C. Sociales</div>
+        <div class="slice-chip" data-v="Ingeniería Civil">Ing. Civil</div>
+        <div class="slice-chip" data-v="Economía">Economía</div>
+      </div>
+    </div>
+
+    <button class="reset-btn" onclick="resetFilters()">↺ Restablecer filtros</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="topbar-left">
+      <div class="topbar-breadcrumb">Dashboard <span>/ Admisión EPG 2026</span></div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-date" id="topbar-date"></span>
+      <span class="topbar-tag">SUNEDU Licenciada</span>
+    </div>
+  </div>
+
+  <!-- ACTIVE FILTERS BAR -->
+  <div id="active-filters">
+    <span class="af-label">Filtros activos:</span>
+    <span class="af-empty" id="af-empty">Ningún filtro aplicado — mostrando todos los datos</span>
+  </div>
+
+  <!-- SECTION TABS -->
+  <div class="section-tabs">
+    <div class="s-tab active" data-tab="overview">📊 Resumen General</div>
+    <div class="s-tab" data-tab="programs">📈 Análisis Programas</div>
+    <div class="s-tab" data-tab="detail">📋 Detalle por Mención</div>
+  </div>
+
+  <!-- ═══ TAB: OVERVIEW ═══════════════════════════════════════ -->
+  <div class="tab-content active" id="tab-overview">
+
+    <!-- KPIs -->
+    <div class="kpi-row" id="kpi-row"></div>
+
+    <!-- ROW 1: Barras + Donut -->
+    <div class="row c21">
+      <div class="panel">
+        <div class="panel-head">
+          <div><div class="panel-title">Preinscritos vs Inscritos por Tipo</div><div class="panel-desc">Comparativa global Maestría / Doctorado</div></div>
+        </div>
+        <div class="panel-body"><div class="cw cw-260"><canvas id="c-overall"></canvas></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div><div class="panel-title">Distribución de Postulantes</div><div class="panel-desc">Proporción por tipo de programa</div></div>
+        </div>
+        <div class="panel-body"><div class="cw cw-260"><canvas id="c-donut"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Conversion GRANDE -->
+    <div class="panel">
+      <div class="panel-head">
+        <div><div class="panel-title">Tasa de Conversión por Tipo de Programa</div><div class="panel-desc">Porcentaje de preinscritos que completaron su inscripción</div></div>
+      </div>
+      <div class="conv-grid" id="conv-grid"></div>
+    </div>
+
+    <!-- ROW 3: Top menciones -->
+    <div class="row c2">
+      <div class="panel">
+        <div class="panel-head"><div><div class="panel-title">Top 10 — Mayor Demanda</div><div class="panel-desc">Menciones con más preinscritos</div></div></div>
+        <ul class="top-list" id="top-pre"></ul>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><div class="panel-title">Top 10 — Mayor Ingreso</div><div class="panel-desc">Menciones con más inscritos confirmados</div></div></div>
+        <ul class="top-list" id="top-ins"></ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ TAB: PROGRAMS ═════════════════════════════════════ -->
+  <div class="tab-content" id="tab-programs">
+
+    <div class="row c2">
+      <div class="panel">
+        <div class="panel-head"><div><div class="panel-title">Preinscritos por Programa</div><div class="panel-desc">Agrupado por unidad académica</div></div></div>
+        <div class="panel-body"><div class="cw cw-500"><canvas id="c-prog-pre"></canvas></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><div class="panel-title">Inscritos por Programa</div><div class="panel-desc">Ingresantes confirmados por unidad</div></div></div>
+        <div class="panel-body"><div class="cw cw-500"><canvas id="c-prog-ins"></canvas></div></div>
+      </div>
+    </div>
+
+    <div class="row c2">
+      <div class="panel">
+        <div class="panel-head"><div><div class="panel-title">Tasa de Admisión por Mención (Top 20)</div><div class="panel-desc">Verde ≥60% · Naranja 30–59% · Rojo &lt;30%</div></div></div>
+        <div class="panel-body"><div class="cw cw-560"><canvas id="c-rate"></canvas></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><div class="panel-title">Dispersión: Preinscritos vs Inscritos</div><div class="panel-desc">Cada punto es una mención activa</div></div></div>
+        <div class="legend-row">
+          <div class="leg-item"><div class="leg-dot" style="background:var(--bl2)"></div>Maestría</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--cr)"></div>Doctorado</div>
+        </div>
+        <div class="panel-body" style="padding-top:0"><div class="cw cw-500"><canvas id="c-scatter"></canvas></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div><div class="panel-title">Comparativa Completa por Programa — Preinscritos y Inscritos</div><div class="panel-desc">Vista apilada de todos los programas activos</div></div></div>
+      <div class="panel-body"><div class="cw cw-400"><canvas id="c-stacked"></canvas></div></div>
+    </div>
+
+  </div>
+
+  <!-- ═══ TAB: DETAIL ════════════════════════════════════════ -->
+  <div class="tab-content" id="tab-detail">
+
+    <div class="panel">
+      <div class="panel-head">
+        <div><div class="panel-title">Registro Completo — Admisión 2026</div><div class="panel-desc">Todas las menciones de Maestría y Doctorado</div></div>
+      </div>
+      <div class="tbl-controls">
+        <div class="tbl-search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="tbl-search" placeholder="Buscar programa, mención…">
+        </div>
+        <div class="tbl-filter-pills">
+          <button class="tbl-pill act" data-f="all">Todos</button>
+          <button class="tbl-pill" data-f="Maestria">Maestría</button>
+          <button class="tbl-pill" data-f="Doctorado">Doctorado</button>
+          <button class="tbl-pill" data-f="activo">Con actividad</button>
+          <button class="tbl-pill" data-f="sinact">Sin actividad</button>
+          <button class="tbl-pill" data-f="altaconv">Tasa alta ≥60%</button>
+        </div>
+        <span class="tbl-count" id="tbl-count"></span>
+        <select class="tbl-sort-select" id="tbl-sort-sel">
+          <option value="pre-desc">↓ Preinscritos</option>
+          <option value="ins-desc">↓ Inscritos</option>
+          <option value="rate-desc">↓ Tasa %</option>
+          <option value="prog-asc">A–Z Programa</option>
+          <option value="men-asc">A–Z Mención</option>
+        </select>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="tblSort('tipo')" id="th-tipo">Tipo</th>
+              <th onclick="tblSort('programa')" id="th-prog">Programa</th>
+              <th onclick="tblSort('mencion')" id="th-men">Mención</th>
+              <th onclick="tblSort('pre')" id="th-pre">Preinscritos</th>
+              <th onclick="tblSort('ins')" id="th-ins">Inscritos</th>
+              <th>Tasa de Conversión</th>
+              <th onclick="tblSort('diff')" id="th-diff">No ingresaron</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-body"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span class="pg-info" id="pg-info"></span>
+        <div class="pg-btns" id="pg-btns"></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ════════════════════ DATA ════════════════════════════════════════════════════
+const DATA = [
+  {id:2,tipo:'Doctorado',programa:'Ciencias Agrarias',mencion:'Ciencia, Tecnología y Medio Ambiente',pre:11,ins:3},
+  {id:2,tipo:'Doctorado',programa:'Ciencias Agrarias',mencion:'Recursos Naturales y Desarrollo Sustentable',pre:9,ins:5},
+  {id:2,tipo:'Doctorado',programa:'Ciencias Contables y Administrativas',mencion:'Administración',pre:17,ins:7},
+  {id:2,tipo:'Doctorado',programa:'Ciencias Contables y Administrativas',mencion:'Contabilidad y Finanzas',pre:11,ins:9},
+  {id:2,tipo:'Doctorado',programa:'Ciencias de la Educación',mencion:'Educación',pre:62,ins:25},
+  {id:2,tipo:'Doctorado',programa:'Ciencias de la Salud',mencion:'Ciencias de la Salud',pre:12,ins:1},
+  {id:2,tipo:'Doctorado',programa:'Ciencias Jurídicas y Políticas',mencion:'Derecho',pre:42,ins:23},
+  {id:2,tipo:'Doctorado',programa:'Ciencias Sociales',mencion:'Ciencias Sociales, Gestión Pública y Desarrollo Territorial',pre:19,ins:6},
+  {id:2,tipo:'Doctorado',programa:'Ingeniería Económica',mencion:'Economía y Políticas Públicas',pre:16,ins:2},
+  {id:2,tipo:'Doctorado',programa:'Ingeniería Estadística e Informática',mencion:'Ciencias de la Computación',pre:22,ins:8},
+  {id:2,tipo:'Doctorado',programa:'Ingeniería Estadística e Informática',mencion:'Estadística Aplicada',pre:18,ins:9},
+  {id:2,tipo:'Doctorado',programa:'Ingeniería Estadística e Informática',mencion:'Estadística e Informática',pre:0,ins:0},
+  {id:2,tipo:'Doctorado',programa:'Ingeniería Mecánica Eléctrica, Electrónica y Sistemas',mencion:'Ciencias de la Ingeniería Mecánica Eléctrica',pre:6,ins:2},
+  {id:2,tipo:'Doctorado',programa:'Medicina Veterinaria y Zootecnia',mencion:'Ciencia Animal',pre:10,ins:2},
+  {id:1,tipo:'Maestria',programa:'Administración',mencion:'Administración de Negocios',pre:18,ins:10},
+  {id:1,tipo:'Maestria',programa:'Administración',mencion:'Gerencia y Gestión Publica',pre:56,ins:23},
+  {id:1,tipo:'Maestria',programa:'Arquitectura',mencion:'Arquitectura Sostenible',pre:0,ins:0},
+  {id:1,tipo:'Maestria',programa:'Arquitectura',mencion:'Gerencia de Desarrollo Urbano - Regional',pre:7,ins:3},
+  {id:1,tipo:'Maestria',programa:'Arquitectura',mencion:'Gerencia de la Construcción Sostenible',pre:14,ins:2},
+  {id:1,tipo:'Maestria',programa:'Arquitectura',mencion:'Gestión de Riesgos en Proyectos de Infraestructura',pre:0,ins:0},
+  {id:1,tipo:'Maestria',programa:'Ciencia Animal',mencion:'Producción Animal',pre:10,ins:2},
+  {id:1,tipo:'Maestria',programa:'Ciencia Animal',mencion:'Reproducción Animal',pre:4,ins:2},
+  {id:1,tipo:'Maestria',programa:'Ciencia Animal',mencion:'Salud Animal',pre:11,ins:5},
+  {id:1,tipo:'Maestria',programa:'Ciencias - Ingeniería Química',mencion:'Seguridad Industrial y Ambiental',pre:29,ins:7},
+  {id:1,tipo:'Maestria',programa:'Ciencias Agrarias',mencion:'Cambio Climático y Gestión de Recursos Genéticos',pre:3,ins:1},
+  {id:1,tipo:'Maestria',programa:'Ciencias Agrarias',mencion:'Producción y Gestión de Sistemas Sostenibles',pre:2,ins:0},
+  {id:1,tipo:'Maestria',programa:'Ciencias de la Ingeniería Agrícola',mencion:'Gestión y Auditoría Ambiental',pre:11,ins:8},
+  {id:1,tipo:'Maestria',programa:'Ciencias de la Ingeniería Agrícola',mencion:'Ingeniería Ambiental',pre:6,ins:0},
+  {id:1,tipo:'Maestria',programa:'Ciencias de la Ingeniería Agrícola',mencion:'Ingeniería en Recursos Hídricos',pre:16,ins:10},
+  {id:1,tipo:'Maestria',programa:'Ciencias de la Ingeniería Mecánica Eléctrica',mencion:'Gestión de Operación y Mantenimiento de Sistemas Eléctricos',pre:8,ins:3},
+  {id:1,tipo:'Maestria',programa:'Ciencias de la Nutrición',mencion:'Gerencia de Programas y Seguridad Alimentaria',pre:9,ins:4},
+  {id:1,tipo:'Maestria',programa:'Ciencias de la Nutrición',mencion:'Nutrición Clínica',pre:10,ins:3},
+  {id:1,tipo:'Maestria',programa:'Ciencias Sociales',mencion:'Arte y Educación Artística',pre:24,ins:14},
+  {id:1,tipo:'Maestria',programa:'Ciencias Sociales',mencion:'Ciencias Forenses y Criminalística',pre:0,ins:0},
+  {id:1,tipo:'Maestria',programa:'Ciencias Sociales',mencion:'Gestión Pública y Desarrollo Local',pre:25,ins:8},
+  {id:1,tipo:'Maestria',programa:'Ciencias Sociales',mencion:'Psicopedagogía Terapéutica',pre:0,ins:0},
+  {id:1,tipo:'Maestria',programa:'Ciencias Sociales',mencion:'Relaciones Comunitarias y Resolución de Conflictos Sociales',pre:12,ins:3},
+  {id:1,tipo:'Maestria',programa:'Contabilidad y Administración',mencion:'Administración y Finanzas',pre:11,ins:3},
+  {id:1,tipo:'Maestria',programa:'Contabilidad y Administración',mencion:'Auditoría Integral',pre:4,ins:1},
+  {id:1,tipo:'Maestria',programa:'Contabilidad y Administración',mencion:'Auditoría y Tributación',pre:35,ins:18},
+  {id:1,tipo:'Maestria',programa:'Contabilidad y Administración',mencion:'Gestión Empresarial',pre:7,ins:3},
+  {id:1,tipo:'Maestria',programa:'Contabilidad y Administración',mencion:'Gestión Gubernamental y Desarrollo Empresarial',pre:18,ins:7},
+  {id:1,tipo:'Maestria',programa:'Contabilidad y Administración',mencion:'Gestión Pública',pre:58,ins:19},
+  {id:1,tipo:'Maestria',programa:'Contabilidad y Administración',mencion:'Gestión Tributaria',pre:6,ins:4},
+  {id:1,tipo:'Maestria',programa:'Contabilidad y Administración',mencion:'Marketing y Negocios Internacionales',pre:3,ins:0},
+  {id:1,tipo:'Maestria',programa:'Derecho',mencion:'Derecho Administrativo y Gerencia Pública',pre:35,ins:10},
+  {id:1,tipo:'Maestria',programa:'Derecho',mencion:'Derecho Constitucional y Procesal Constitucional',pre:22,ins:5},
+  {id:1,tipo:'Maestria',programa:'Derecho',mencion:'Derecho Procesal Penal',pre:60,ins:21},
+  {id:1,tipo:'Maestria',programa:'Desarrollo Rural',mencion:'Gestión de Recursos Naturales y Medio Ambiente',pre:4,ins:0},
+  {id:1,tipo:'Maestria',programa:'Desarrollo Rural',mencion:'Ordenamiento Territorial y Medio Ambiente',pre:2,ins:2},
+  {id:1,tipo:'Maestria',programa:'Ecología',mencion:'Acuicultura',pre:3,ins:1},
+  {id:1,tipo:'Maestria',programa:'Ecología',mencion:'Ecología y Gestión Ambiental',pre:5,ins:1},
+  {id:1,tipo:'Maestria',programa:'Ecología',mencion:'Evaluación del Impacto Ambiental',pre:11,ins:7},
+  {id:1,tipo:'Maestria',programa:'Economía',mencion:'Gerencia de Proyectos',pre:17,ins:5},
+  {id:1,tipo:'Maestria',programa:'Economía',mencion:'Planificación y Gestión Pública',pre:32,ins:9},
+  {id:1,tipo:'Maestria',programa:'Economía',mencion:'Proyectos de Inversión',pre:16,ins:3},
+  {id:1,tipo:'Maestria',programa:'Educación',mencion:'Administración de la Educación',pre:97,ins:53},
+  {id:1,tipo:'Maestria',programa:'Educación',mencion:'Ciencias del Deporte',pre:12,ins:7},
+  {id:1,tipo:'Maestria',programa:'Educación',mencion:'Didáctica de la Educación Superior',pre:53,ins:20},
+  {id:1,tipo:'Maestria',programa:'Educación',mencion:'Didáctica de la Matemática',pre:10,ins:7},
+  {id:1,tipo:'Maestria',programa:'Educación',mencion:'Didáctica de las Ciencias Sociales',pre:6,ins:2},
+  {id:1,tipo:'Maestria',programa:'Educación',mencion:'Educación Especial',pre:10,ins:6},
+  {id:1,tipo:'Maestria',programa:'Educación',mencion:'Educación Inicial y Primera Infancia',pre:20,ins:5},
+  {id:1,tipo:'Maestria',programa:'Educación',mencion:'Educación Intercultural',pre:0,ins:0},
+  {id:1,tipo:'Maestria',programa:'Educación',mencion:'Educación Intercultural Bilingüe',pre:8,ins:4},
+  {id:1,tipo:'Maestria',programa:'Educación',mencion:'Matemática y Comunicación en Educación Primaria',pre:14,ins:8},
+  {id:1,tipo:'Maestria',programa:'Educación',mencion:'Planificación y Gestión en Educación Intercultural Bilingüe',pre:0,ins:0},
+  {id:1,tipo:'Maestria',programa:'Extracción de Metales estratégicos',mencion:'Extracción de Metales Estratégicos',pre:6,ins:1},
+  {id:1,tipo:'Maestria',programa:'Geotecnia y Geomecánica Minera',mencion:'Geotecnia y Geomecánica Minera',pre:19,ins:9},
+  {id:1,tipo:'Maestria',programa:'Informática',mencion:'Gerencia de Tecnologías de Información y Comunicaciones',pre:10,ins:6},
+  {id:1,tipo:'Maestria',programa:'Informática',mencion:'Informática Educativa',pre:0,ins:0},
+  {id:1,tipo:'Maestria',programa:'Informática',mencion:'Ingeniería de Software',pre:0,ins:0},
+  {id:1,tipo:'Maestria',programa:'Informática',mencion:'Matemática y Simulación Computacional',pre:0,ins:0},
+  {id:1,tipo:'Maestria',programa:'Ingeniería Civil',mencion:'Gerencia de la Construcción',pre:40,ins:6},
+  {id:1,tipo:'Maestria',programa:'Ingeniería Civil',mencion:'Transportes e Infraestructura Vial',pre:31,ins:8},
+  {id:1,tipo:'Maestria',programa:'Ingeniería de Sistemas',mencion:'Ciencia de Datos',pre:32,ins:11},
+  {id:1,tipo:'Maestria',programa:'Ingeniería de Sistemas',mencion:'Gerencia de TI y Transformación Digital',pre:12,ins:3},
+  {id:1,tipo:'Maestria',programa:'Ingeniería de Sistemas',mencion:'Ingeniería de Sistemas',pre:5,ins:1},
+  {id:1,tipo:'Maestria',programa:'Investigación y Docencia Universitaria',mencion:'Investigación y Docencia Universitaria',pre:39,ins:9},
+  {id:1,tipo:'Maestria',programa:'Lingüística Andina y Educación',mencion:'Lingüística Andina y Educación',pre:8,ins:3},
+  {id:1,tipo:'Maestria',programa:'Salud Pública',mencion:'Dirección y Gestión de Servicios de Salud',pre:41,ins:14},
+  {id:1,tipo:'Maestria',programa:'Salud Pública',mencion:'Epidemiología',pre:12,ins:1},
+  {id:1,tipo:'Maestria',programa:'Salud Pública',mencion:'Investigación Cuantitativa y Cualitativa en Salud',pre:0,ins:0},
+  {id:1,tipo:'Maestria',programa:'Salud Pública',mencion:'Salud y Desarrollo',pre:0,ins:0},
+  {id:1,tipo:'Maestria',programa:'Tecnologías de Protección Ambiental',mencion:'Tecnologías de Protección Ambiental',pre:3,ins:0},
+  {id:1,tipo:'Maestria',programa:'Trabajo Social',mencion:'Especialidad de Gestión de Recursos Humanos',pre:5,ins:2},
+  {id:1,tipo:'Maestria',programa:'Trabajo Social',mencion:'Especialidad de Promoción de la Familia e Inclusión Social',pre:5,ins:5},
+];
+
+// ════════════════════ STATE ═══════════════════════════════════════════════════
+const state = {
+  tipo:'all', actividad:'all', tasa:'all', prog:'all',
+  minpre:0, search:'',
+  tblFilter:'all', tblSearch:'', tblSortKey:'pre', tblSortDir:-1,
+  tblPage:1,
+};
+const PAGE = 15;
+
+const sum  = (arr,k)=>arr.reduce((a,b)=>a+b[k],0);
+const pct  = (a,b)=>b===0?0:Math.round(a/b*100);
+const trunc= (s,n)=>s.length>n?s.slice(0,n)+'…':s;
+const rate = d=>d.pre===0?-1:pct(d.ins,d.pre);
+
+// ════════════════════ FILTER ENGINE ══════════════════════════════════════════
+function applyFilters(forTable=false){
+  let d=[...DATA];
+  const tFilter = forTable? state.tblFilter : state.tipo;
+  const tSearch = forTable? state.tblSearch : state.search;
+
+  if(!forTable){
+    if(state.tipo!=='all') d=d.filter(r=>r.tipo===state.tipo);
+    if(state.actividad==='activo') d=d.filter(r=>r.pre>0);
+    if(state.actividad==='inactivo') d=d.filter(r=>r.pre===0);
+    if(state.tasa==='alta') d=d.filter(r=>r.pre>0&&pct(r.ins,r.pre)>=60);
+    if(state.tasa==='media') d=d.filter(r=>r.pre>0&&pct(r.ins,r.pre)>=30&&pct(r.ins,r.pre)<60);
+    if(state.tasa==='baja') d=d.filter(r=>r.pre>0&&pct(r.ins,r.pre)<30);
+    if(state.prog!=='all') d=d.filter(r=>r.programa===state.prog);
+    if(state.minpre>0) d=d.filter(r=>r.pre>=state.minpre);
+    if(state.search) d=d.filter(r=>r.programa.toLowerCase().includes(state.search)||r.mencion.toLowerCase().includes(state.search));
+  } else {
+    if(tFilter==='Maestria') d=d.filter(r=>r.tipo==='Maestria');
+    else if(tFilter==='Doctorado') d=d.filter(r=>r.tipo==='Doctorado');
+    else if(tFilter==='activo') d=d.filter(r=>r.pre>0);
+    else if(tFilter==='sinact') d=d.filter(r=>r.pre===0&&r.ins===0);
+    else if(tFilter==='altaconv') d=d.filter(r=>r.pre>0&&pct(r.ins,r.pre)>=60);
+    if(tSearch) d=d.filter(r=>r.programa.toLowerCase().includes(tSearch)||r.mencion.toLowerCase().includes(tSearch)||r.tipo.toLowerCase().includes(tSearch));
+  }
+  return d;
+}
+
+// ════════════════════ CHARTS STORE ═══════════════════════════════════════════
+const charts={};
+function mkChart(id,cfg){
+  if(charts[id]) charts[id].destroy();
+  charts[id]=new Chart(document.getElementById(id),cfg);
+}
+
+const COLORS={
+  cr:'#801601',or:'#D95604',gn:'#018030',bl:'#0a4880',
+  cr2:'rgba(128,22,1,0.5)',or2:'rgba(217,86,4,0.5)',bl2:'rgba(10,72,128,0.5)',
+};
+const TICK={font:{family:'Sora',size:10},color:'#7a7060'};
+const GRID={color:'rgba(255,255,255,0.04)'};
+
+// ════════════════════ KPI ════════════════════════════════════════════════════
+function buildKPI(){
+  const d=applyFilters();
+  const mae=d.filter(r=>r.tipo==='Maestria');
+  const doc=d.filter(r=>r.tipo==='Doctorado');
+  const tp=sum(d,'pre'),ti=sum(d,'ins');
+  const activos=d.filter(r=>r.pre>0).length;
+  const zeros=d.filter(r=>r.pre===0&&r.ins===0).length;
+  const maxPre=Math.max(...d.map(r=>r.pre));
+
+  const kpis=[
+    {cls:'k1',icon:'🎓',val:tp,lbl:'Total Preinscritos',sub:`${ti} inscritos — tasa ${pct(ti,tp)}%`,badge:null},
+    {cls:'k2',icon:'✅',val:ti,lbl:'Total Inscritos',sub:`Conversión global: ${pct(ti,tp)}%`,badge:null},
+    {cls:'k3',icon:'🎓',val:sum(mae,'pre'),lbl:'Preinscritos Maestría',sub:`${sum(mae,'ins')} inscritos (${pct(sum(mae,'ins'),sum(mae,'pre'))}%)`,badge:null},
+    {cls:'k4',icon:'🔬',val:sum(doc,'pre'),lbl:'Preinscritos Doctorado',sub:`${sum(doc,'ins')} inscritos (${pct(sum(doc,'ins'),sum(doc,'pre'))}%)`,badge:null},
+    {cls:'k5',icon:'📚',val:activos,lbl:'Menciones Activas',sub:`${zeros} sin postulantes`,badge:null},
+    {cls:'k6',icon:'🏆',val:maxPre,lbl:'Máx. Preinscritos',sub:trunc(d.sort((a,b)=>b.pre-a.pre)[0]?.mencion||'',32),badge:null},
+  ];
+  document.getElementById('kpi-row').innerHTML=kpis.map(k=>
+    `<div class="kpi ${k.cls}">
+      <div class="kpi-top"><div class="kpi-icon">${k.icon}</div></div>
+      <div class="kpi-val">${k.val}</div>
+      <div class="kpi-lbl">${k.lbl}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+}
+
+// ════════════════════ OVERALL CHART ══════════════════════════════════════════
+function buildOverall(){
+  const d=applyFilters();
+  const mae=d.filter(r=>r.tipo==='Maestria');
+  const doc=d.filter(r=>r.tipo==='Doctorado');
+  mkChart('c-overall',{
+    type:'bar',
+    data:{
+      labels:['Maestría','Doctorado','Total'],
+      datasets:[
+        {label:'Preinscritos',data:[sum(mae,'pre'),sum(doc,'pre'),sum(d,'pre')],backgroundColor:COLORS.cr,borderRadius:5},
+        {label:'Inscritos',data:[sum(mae,'ins'),sum(doc,'ins'),sum(d,'ins')],backgroundColor:COLORS.or,borderRadius:5},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{family:'Sora',size:11},color:'#b0a898',boxWidth:10}}},
+      scales:{
+        x:{grid:{display:false},ticks:TICK},
+        y:{grid:GRID,ticks:{...TICK,color:'#7a7060'}},
+      },
+      animation:{duration:800}
+    }
+  });
+}
+
+// ════════════════════ DONUT ══════════════════════════════════════════════════
+function buildDonut(){
+  const d=applyFilters();
+  const mae=d.filter(r=>r.tipo==='Maestria');
+  const doc=d.filter(r=>r.tipo==='Doctorado');
+  mkChart('c-donut',{
+    type:'doughnut',
+    data:{
+      labels:['Maestría Preinscritos','Maestría Inscritos','Doctorado Preinscritos','Doctorado Inscritos'],
+      datasets:[{
+        data:[sum(mae,'pre'),sum(mae,'ins'),sum(doc,'pre'),sum(doc,'ins')],
+        backgroundColor:['#0a4880','#1a6ab0','#801601','#D95604'],
+        borderWidth:0,hoverOffset:10,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'58%',
+      plugins:{
+        legend:{position:'bottom',labels:{font:{family:'Sora',size:10},color:'#b0a898',boxWidth:10,padding:10}},
+        tooltip:{callbacks:{label:c=>` ${c.label}: ${c.raw}`}}
+      },
+      animation:{duration:900}
+    }
+  });
+}
+
+// ════════════════════ CONVERSION RINGS (BIG) ═════════════════════════════════
+function buildConv(){
+  const d=applyFilters();
+  const mae=d.filter(r=>r.tipo==='Maestria');
+  const doc=d.filter(r=>r.tipo==='Doctorado');
+
+  const groups=[
+    {label:'Global',color:'#D95604',pre:sum(d,'pre'),ins:sum(d,'ins'),sub:'Todos los programas'},
+    {label:'Maestría',color:'#1a6ab0',pre:sum(mae,'pre'),ins:sum(mae,'ins'),sub:`${mae.length} menciones`},
+    {label:'Doctorado',color:'#801601',pre:sum(doc,'pre'),ins:sum(doc,'ins'),sub:`${doc.length} menciones`},
+  ];
+
+  const R=66, CIRC=2*Math.PI*R;
+
+  document.getElementById('conv-grid').innerHTML=groups.map(g=>{
+    const p=pct(g.ins,g.pre);
+    return `<div class="conv-item">
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 160 160">
+          <circle class="ring-track" cx="80" cy="80" r="${R}"/>
+          <circle class="ring-fill" cx="80" cy="80" r="${R}"
+            stroke="${g.color}"
+            stroke-dasharray="${CIRC}"
+            stroke-dashoffset="${CIRC}"
+            transform="rotate(-90 80 80)"
+            data-offset="${CIRC*(1-p/100)}"
+            style="stroke-dashoffset:${CIRC}"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-pct" style="color:${g.color}">${p}%</div>
+          <div style="font-size:0.6rem;color:var(--tx3);margin-top:2px">Tasa</div>
+        </div>
+      </div>
+      <div class="conv-info">
+        <div class="conv-label">${g.label}</div>
+        <div class="conv-nums">${g.ins} inscritos de ${g.pre} preinscritos</div>
+        <div class="conv-nums" style="color:var(--tx3)">${g.sub}</div>
+        <div class="conv-bar"><div class="conv-bar-fill" data-pct="${p}" style="width:0%;background:${g.color}"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  setTimeout(()=>{
+    document.querySelectorAll('circle.ring-fill').forEach(c=>{
+      c.style.strokeDashoffset=c.dataset.offset;
+    });
+    document.querySelectorAll('.conv-bar-fill').forEach(el=>{
+      el.style.width=el.dataset.pct+'%';
+    });
+  },200);
+}
+
+// ════════════════════ TOP LISTS ══════════════════════════════════════════════
+function buildTopLists(){
+  const d=applyFilters();
+  const sortPre=[...d].sort((a,b)=>b.pre-a.pre).slice(0,10);
+  const sortIns=[...d].sort((a,b)=>b.ins-a.ins).slice(0,10);
+
+  const renderList=(items,key,el)=>{
+    document.getElementById(el).innerHTML=items.map((r,i)=>`
+      <li class="top-item">
+        <span class="top-rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</span>
+        <div class="top-info">
+          <div class="top-name" title="${r.mencion}">${trunc(r.mencion,38)}</div>
+          <div class="top-prog">${r.programa} · <span style="color:${r.tipo==='Doctorado'?'#f9887a':'#7ab8f5'}">${r.tipo}</span></div>
+        </div>
+        <span class="top-val">${r[key]}</span>
+      </li>`).join('');
+  };
+  renderList(sortPre,'pre','top-pre');
+  renderList(sortIns,'ins','top-ins');
+}
+
+// ════════════════════ PROGRAM CHARTS ═════════════════════════════════════════
+function buildProgCharts(){
+  const d=applyFilters().filter(r=>r.pre>0||r.ins>0);
+
+  const grupos={};
+  d.forEach(r=>{
+    if(!grupos[r.programa]) grupos[r.programa]={pre:0,ins:0};
+    grupos[r.programa].pre+=r.pre;
+    grupos[r.programa].ins+=r.ins;
+  });
+  const labels=Object.keys(grupos).sort((a,b)=>grupos[b].pre-grupos[a].pre);
+  const preD=labels.map(l=>grupos[l].pre);
+  const insD=labels.map(l=>grupos[l].ins);
+  const short=labels.map(l=>trunc(l,26));
+
+  const hBar=(id,data,color)=>mkChart(id,{
+    type:'bar',
+    data:{labels:short,datasets:[{data,backgroundColor:color,borderRadius:4,label:''}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:GRID,ticks:TICK},
+        y:{grid:{display:false},ticks:{...TICK,font:{family:'Sora',size:9}}},
+      },
+      animation:{duration:700}
+    }
+  });
+  hBar('c-prog-pre',preD,COLORS.cr);
+  hBar('c-prog-ins',insD,COLORS.or);
+
+  // Rate chart
+  const active=d.filter(r=>r.pre>0);
+  const sorted=[...active].sort((a,b)=>pct(b.ins,b.pre)-pct(a.ins,a.pre)).slice(0,20);
+  const rLabels=sorted.map(r=>trunc(r.mencion,24));
+  const rData=sorted.map(r=>pct(r.ins,r.pre));
+  const rColors=rData.map(v=>v>=60?COLORS.gn:v>=30?COLORS.or:COLORS.cr);
+  mkChart('c-rate',{
+    type:'bar',
+    data:{labels:rLabels,datasets:[{data:rData,backgroundColor:rColors,borderRadius:4,label:'Tasa %'}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},
+      scales:{
+        x:{max:100,grid:GRID,ticks:{...TICK,callback:v=>v+'%'}},
+        y:{grid:{display:false},ticks:{...TICK,font:{family:'Sora',size:9}}},
+      },
+      animation:{duration:700}
+    }
+  });
+
+  // Scatter
+  const scPoints=d.filter(r=>r.pre>0).map(r=>({x:r.pre,y:r.ins,label:r.mencion,tipo:r.tipo}));
+  const mae=scPoints.filter(p=>p.tipo==='Maestria');
+  const doc=scPoints.filter(p=>p.tipo==='Doctorado');
+  mkChart('c-scatter',{
+    type:'scatter',
+    data:{
+      datasets:[
+        {label:'Maestría',data:mae.map(p=>({x:p.x,y:p.y})),backgroundColor:'rgba(26,106,176,0.7)',pointRadius:5,pointHoverRadius:7},
+        {label:'Doctorado',data:doc.map(p=>({x:p.x,y:p.y})),backgroundColor:'rgba(128,22,1,0.8)',pointRadius:5,pointHoverRadius:7},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{family:'Sora',size:10},color:'#b0a898',boxWidth:8}}},
+      scales:{
+        x:{title:{display:true,text:'Preinscritos',color:'#7a7060',font:{family:'Sora',size:10}},grid:GRID,ticks:TICK},
+        y:{title:{display:true,text:'Inscritos',color:'#7a7060',font:{family:'Sora',size:10}},grid:GRID,ticks:TICK},
+      }
+    }
+  });
+
+  // Stacked
+  const sLabels=Object.keys(grupos).sort((a,b)=>grupos[b].pre-grupos[a].pre);
+  mkChart('c-stacked',{
+    type:'bar',
+    data:{
+      labels:sLabels.map(l=>trunc(l,22)),
+      datasets:[
+        {label:'No inscritos',data:sLabels.map(l=>grupos[l].pre-grupos[l].ins),backgroundColor:'rgba(128,22,1,0.4)',borderRadius:3,stack:'s'},
+        {label:'Inscritos',data:sLabels.map(l=>grupos[l].ins),backgroundColor:COLORS.or,borderRadius:3,stack:'s'},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{family:'Sora',size:11},color:'#b0a898',boxWidth:10}}},
+      scales:{
+        x:{grid:{display:false},ticks:TICK,stacked:true},
+        y:{grid:GRID,ticks:TICK,stacked:true},
+      },
+      animation:{duration:700}
+    }
+  });
+}
+
+// ════════════════════ TABLE ══════════════════════════════════════════════════
+let tblSortCol=null,tblSortDir=-1;
+function tblSort(col){
+  if(tblSortCol===col) tblSortDir*=-1; else tblSortDir=-1;
+  tblSortCol=col;
+  // update headers
+  ['tipo','programa','mencion','pre','ins','diff'].forEach(c=>{
+    const th=document.getElementById('th-'+c);
+    if(th){th.classList.remove('asc','desc'); if(c===col) th.classList.add(tblSortDir===1?'asc':'desc');}
+  });
+  state.tblPage=1;
+  renderTable();
+}
+
+function getTblData(){
+  let d=applyFilters(true);
+  if(tblSortCol){
+    d=[...d].sort((a,b)=>{
+      let va,vb;
+      if(tblSortCol==='tipo'){va=a.tipo;vb=b.tipo;}
+      else if(tblSortCol==='programa'){va=a.programa;vb=b.programa;}
+      else if(tblSortCol==='mencion'){va=a.mencion;vb=b.mencion;}
+      else if(tblSortCol==='pre'){va=a.pre;vb=b.pre;}
+      else if(tblSortCol==='ins'){va=a.ins;vb=b.ins;}
+      else if(tblSortCol==='diff'){va=a.pre-a.ins;vb=b.pre-b.ins;}
+      if(typeof va==='string') return va.localeCompare(vb)*tblSortDir;
+      return (va-vb)*tblSortDir;
+    });
+  }
+  // Quick-sort select
+  const sel=document.getElementById('tbl-sort-sel');
+  if(sel&&!tblSortCol){
+    const v=sel.value;
+    if(v==='pre-desc') d=[...d].sort((a,b)=>b.pre-a.pre);
+    else if(v==='ins-desc') d=[...d].sort((a,b)=>b.ins-a.ins);
+    else if(v==='rate-desc') d=[...d].sort((a,b)=>pct(b.ins,b.pre)-pct(a.ins,a.pre));
+    else if(v==='prog-asc') d=[...d].sort((a,b)=>a.programa.localeCompare(b.programa));
+    else if(v==='men-asc') d=[...d].sort((a,b)=>a.mencion.localeCompare(b.mencion));
+  }
+  return d;
+}
+
+function renderTable(){
+  const rows=getTblData();
+  const start=(state.tblPage-1)*PAGE;
+  const page=rows.slice(start,start+PAGE);
+
+  document.getElementById('tbl-count').textContent=`${rows.length} registros`;
+
+  document.getElementById('tbl-body').innerHTML=page.map(r=>{
+    const p=r.pre>0?pct(r.ins,r.pre):0;
+    const barColor=p>=60?'var(--gn)':p>=30?'var(--or)':'var(--cr)';
+    const noIns=r.pre-r.ins;
+    return `<tr>
+      <td><span class="badge ${r.tipo==='Doctorado'?'doc':'mae'}"><span class="dot"></span>${r.tipo}</span></td>
+      <td style="color:var(--tx2);font-size:0.76rem">${r.programa}</td>
+      <td style="font-weight:600;color:var(--tx)">${r.mencion}</td>
+      <td style="font-weight:700;color:var(--tx);text-align:center">${r.pre}</td>
+      <td style="font-weight:700;color:var(--or);text-align:center">${r.ins}</td>
+      <td style="min-width:140px">
+        <div class="mini-bar">
+          <div class="mini-track"><div class="mini-fill" style="width:${p}%;background:${barColor}"></div></div>
+          <span class="mini-pct" style="color:${barColor}">${r.pre===0?'—':p+'%'}</span>
+        </div>
+      </td>
+      <td style="text-align:center;color:var(--tx3);font-size:0.75rem">${noIns>0?'<span style=color:var(--cr2)>'+noIns+'</span>':'<span style=color:var(--gn)>0</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  renderPagination(rows.length);
+}
+
+function renderPagination(total){
+  const pages=Math.ceil(total/PAGE);
+  const s=(state.tblPage-1)*PAGE+1;
+  const e=Math.min(state.tblPage*PAGE,total);
+  document.getElementById('pg-info').textContent=`${s}–${e} de ${total} registros`;
+
+  let html=`<button class="pg-btn" onclick="goTblPage(${state.tblPage-1})" ${state.tblPage===1?'disabled':''}>‹</button>`;
+  for(let i=1;i<=pages;i++){
+    if(pages<=8||i===1||i===pages||Math.abs(i-state.tblPage)<=1){
+      html+=`<button class="pg-btn ${i===state.tblPage?'cur':''}" onclick="goTblPage(${i})">${i}</button>`;
+    } else if(Math.abs(i-state.tblPage)===2){
+      html+=`<span style="padding:0 3px;color:var(--tx3);font-size:0.8rem">…</span>`;
+    }
+  }
+  html+=`<button class="pg-btn" onclick="goTblPage(${state.tblPage+1})" ${state.tblPage===pages?'disabled':''}>›</button>`;
+  document.getElementById('pg-btns').innerHTML=html;
+}
+
+function goTblPage(p){
+  const rows=getTblData();
+  const pages=Math.ceil(rows.length/PAGE);
+  if(p<1||p>pages) return;
+  state.tblPage=p;
+  renderTable();
+}
+
+// ════════════════════ ACTIVE FILTERS BAR ════════════════════════════════════
+function buildActiveFilters(){
+  const chips=[];
+  if(state.tipo!=='all') chips.push({k:'tipo',v:state.tipo,label:`Tipo: ${state.tipo}`});
+  if(state.actividad!=='all') chips.push({k:'actividad',v:'all',label:`Actividad: ${state.actividad}`});
+  if(state.tasa!=='all') chips.push({k:'tasa',v:'all',label:`Tasa: ${state.tasa}`});
+  if(state.prog!=='all') chips.push({k:'prog',v:'all',label:`Prog: ${trunc(state.prog,18)}`});
+  if(state.minpre>0) chips.push({k:'minpre',v:0,label:`Min preins.: ${state.minpre}`});
+
+  const empty=document.getElementById('af-empty');
+  const container=document.getElementById('active-filters');
+
+  // Remove old chips
+  container.querySelectorAll('.af-chip').forEach(c=>c.remove());
+
+  if(chips.length===0){
+    empty.style.display='';
+  } else {
+    empty.style.display='none';
+    chips.forEach(c=>{
+      const el=document.createElement('span');
+      el.className='af-chip';
+      el.innerHTML=`${c.label} <span class="rm" onclick="clearFilter('${c.k}')">✕</span>`;
+      container.appendChild(el);
+    });
+  }
+}
+
+function clearFilter(k){
+  if(k==='tipo'){state.tipo='all'; setSlice('fl-tipo','all');}
+  if(k==='actividad'){state.actividad='all'; setSlice('fl-actividad','all');}
+  if(k==='tasa'){state.tasa='all'; setSlice('fl-tasa','all');}
+  if(k==='prog'){state.prog='all'; setSlice('fl-prog','all');}
+  if(k==='minpre'){state.minpre=0; document.getElementById('fl-minpre').value=0; document.getElementById('range-val').textContent='≥ 0';}
+  refresh();
+}
+
+function resetFilters(){
+  state.tipo=state.actividad=state.tasa=state.prog='all';
+  state.minpre=0; state.search='';
+  ['fl-tipo','fl-actividad','fl-tasa','fl-prog'].forEach(id=>setSlice(id,'all'));
+  document.getElementById('fl-minpre').value=0;
+  document.getElementById('range-val').textContent='≥ 0';
+  document.getElementById('sb-prog-search').value='';
+  refresh();
+}
+
+function setSlice(id, val){
+  document.querySelectorAll(`#${id} .slice-chip`).forEach(c=>{
+    c.classList.toggle('active', c.dataset.v===val);
+  });
+}
+
+// ════════════════════ REFRESH ALL ═══════════════════════════════════════════
+function refresh(){
+  buildKPI();
+  buildOverall();
+  buildDonut();
+  buildConv();
+  buildTopLists();
+  buildProgCharts();
+  state.tblPage=1;
+  renderTable();
+  buildActiveFilters();
+}
+
+// ════════════════════ SIDEBAR SLICERS ═══════════════════════════════════════
+document.getElementById('fl-tipo').addEventListener('click',e=>{
+  const c=e.target.closest('.slice-chip'); if(!c) return;
+  state.tipo=c.dataset.v; setSlice('fl-tipo',c.dataset.v); refresh();
+});
+document.getElementById('fl-actividad').addEventListener('click',e=>{
+  const c=e.target.closest('.slice-chip'); if(!c) return;
+  state.actividad=c.dataset.v; setSlice('fl-actividad',c.dataset.v); refresh();
+});
+document.getElementById('fl-tasa').addEventListener('click',e=>{
+  const c=e.target.closest('.slice-chip'); if(!c) return;
+  state.tasa=c.dataset.v; setSlice('fl-tasa',c.dataset.v); refresh();
+});
+document.getElementById('fl-prog').addEventListener('click',e=>{
+  const c=e.target.closest('.slice-chip'); if(!c) return;
+  state.prog=c.dataset.v; setSlice('fl-prog',c.dataset.v); refresh();
+});
+document.getElementById('fl-minpre').addEventListener('input',e=>{
+  state.minpre=parseInt(e.target.value);
+  document.getElementById('range-val').textContent=`≥ ${state.minpre}`;
+  refresh();
+});
+document.getElementById('sb-prog-search').addEventListener('input',e=>{
+  state.search=e.target.value.toLowerCase(); refresh();
+});
+
+// TABLE filters
+document.querySelectorAll('.tbl-pill').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tbl-pill').forEach(b=>b.classList.remove('act'));
+    btn.classList.add('act');
+    state.tblFilter=btn.dataset.f;
+    state.tblPage=1;
+    renderTable();
+  });
+});
+document.getElementById('tbl-search').addEventListener('input',e=>{
+  state.tblSearch=e.target.value.toLowerCase(); state.tblPage=1; renderTable();
+});
+document.getElementById('tbl-sort-sel').addEventListener('change',()=>{
+  tblSortCol=null; state.tblPage=1; renderTable();
+});
+
+// ════════════════════ TABS ═══════════════════════════════════════════════════
+function switchTab(id){
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.s-tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  document.querySelector(`.s-tab[data-tab="${id}"]`)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+
+  if(id==='programs') setTimeout(buildProgCharts, 50);
+}
+
+document.querySelectorAll('.s-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>switchTab(tab.dataset.tab));
+});
+
+// ════════════════════ SIDEBAR TOGGLE ════════════════════════════════════════
+function toggleSidebar(){
+  document.body.classList.toggle('collapsed');
+  const btn=document.getElementById('toggle-sidebar');
+  btn.textContent=document.body.classList.contains('collapsed')?'›':'‹';
+}
+
+// ════════════════════ TOPBAR DATE ════════════════════════════════════════════
+document.getElementById('topbar-date').textContent=
+  new Date().toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'});
+
+// ════════════════════ INIT ════════════════════════════════════════════════════
+refresh();
+</script>
+</body>
+</html>
