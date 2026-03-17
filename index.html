@@ -34,7 +34,7 @@ body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--tx);min-heig
   position:fixed;top:0;left:0;width:240px;height:100vh;
   background:var(--bg2);border-right:1px solid var(--bd);
   display:flex;flex-direction:column;z-index:200;
-  transition:width 0.3s;overflow:hidden;
+  transition:width 0.3s,transform 0.3s;overflow:hidden;
 }
 #sidebar.collapsed{width:60px;}
 #sidebar.collapsed .sidebar-label{display:none;}
@@ -389,12 +389,92 @@ tbody td{padding:10px 14px;vertical-align:middle;}
 .tab-content.active{display:flex;flex-direction:column;gap:20px;padding:24px;}
 
 /* ─── RESPONSIVE ─────────────────────────────────────── */
-@media(max-width:768px){
-  #sidebar{width:0;border:none;}
-  #main{margin-left:0;}
-  .kpi-row{grid-template-columns:1fr 1fr;}
-  .conv-grid{grid-template-columns:1fr 1fr;}
+
+/* ─── MOBILE HAMBURGER BUTTON ─────────────────────────── */
+#mob-menu-btn{
+  display:none;width:38px;height:38px;border-radius:9px;
+  border:1px solid var(--bd2);background:var(--bg3);
+  cursor:pointer;color:var(--tx2);align-items:center;justify-content:center;flex-shrink:0;
 }
+#mob-menu-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;}
+#mob-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:190;
+  backdrop-filter:blur(2px);
+}
+#mob-overlay.show{display:block;}
+
+/* ─── TABLET 1024 ──────────────────────────────────────── */
+@media(max-width:1240px){
+  #sidebar{width:200px;}
+  #main{margin-left:200px;}
+  body.collapsed #main{margin-left:60px;}
+}
+
+/* ─── TABLET 900 ───────────────────────────────────────── */
+@media(max-width:900px){
+  #sidebar{width:0;border-right:none;transform:translateX(-100%);}
+  #sidebar.mob-open{width:260px;transform:translateX(0);box-shadow:4px 0 40px rgba(0,0,0,0.6);}
+  body.collapsed #sidebar{width:0;transform:translateX(-100%);}
+  body.collapsed #sidebar.mob-open{width:260px;transform:translateX(0);}
+  #main{margin-left:0!important;}
+  #mob-menu-btn{display:flex;}
+  .kpi-row{grid-template-columns:repeat(2,1fr)!important;}
+  .row.c2,.row.c3,.row.c21,.row.c12,.row.c211{grid-template-columns:1fr!important;}
+  .conv-grid{grid-template-columns:repeat(2,1fr);}
+  .section-tabs{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap;}
+  .s-tab{flex-shrink:0;}
+  #topbar{padding:0 14px;}
+  .topbar-breadcrumb{font-size:0.72rem;}
+  .topbar-tag{display:none;}
+  .cw-500,.cw-560{height:380px;}
+  .tbl-controls{flex-direction:column;align-items:stretch;gap:8px;}
+  .tbl-search{max-width:100%;}
+  .tbl-filter-pills{justify-content:flex-start;}
+  .hero-stats{display:grid;grid-template-columns:1fr 1fr;border-radius:12px;}
+  .hero-stat{border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.06);}
+  .hero-stat:nth-child(odd){border-right:1px solid rgba(255,255,255,0.06)!important;}
+  .hero-stat:last-child,.hero-stat:nth-last-child(2):nth-child(odd){border-bottom:none;}
+  .hero-strip{flex-direction:column;gap:8px;padding:12px 20px;}
+  .hero-strip-dot{display:none;}
+}
+
+/* ─── MOBILE 600 ───────────────────────────────────────── */
+@media(max-width:600px){
+  .kpi-row{grid-template-columns:1fr 1fr!important;}
+  .kpi-val{font-size:1.6rem;}
+  #content,.tab-content.active{padding:12px;}
+  .tab-content.active{gap:12px;}
+  .panel-body{padding:12px;}
+  .panel-head{padding:12px 14px 10px;}
+  .panel-title{font-size:0.78rem;}
+  .conv-grid{grid-template-columns:1fr;}
+  .ring-wrap,.ring-svg{width:130px;height:130px;}
+  .ring-pct{font-size:1.3rem;}
+  .cw-260{height:200px;}
+  .cw-320{height:250px;}
+  .cw-400,.cw-500,.cw-560{height:300px;}
+  .hero-title{font-size:clamp(1.8rem,7vw,3rem);}
+  .hero-title .line2{font-size:clamp(1rem,4vw,1.5rem);}
+  .hero-desc{font-size:0.8rem;}
+  .hero-cta{font-size:0.82rem;padding:12px 24px;}
+  .hero-stats{border-radius:10px;}
+  .hero-stat{padding:16px 20px;}
+  .hero-stat .hs-val{font-size:1.8rem;}
+  #active-filters{padding:8px 14px;}
+  .tbl-wrap{max-height:420px;}
+  table{font-size:0.74rem;}
+  thead th,tbody td{padding:8px 10px;}
+  .pagination{padding:10px 14px;}
+}
+
+/* ─── MOBILE XS 400 ─────────────────────────────────────── */
+@media(max-width:400px){
+  .kpi-row{grid-template-columns:1fr!important;}
+  .tbl-filter-pills .tbl-pill:nth-child(n+4){display:none;}
+  .hero-stats{display:grid;grid-template-columns:1fr;border-radius:8px;}
+  .hero-stat{border-right:none!important;}
+}
+
 
 /* ─── HERO / COVER ─────────────────────────────────────── */
 #hero{
@@ -657,11 +737,15 @@ tbody td{padding:10px 14px;vertical-align:middle;}
 </aside>
 
 <!-- MAIN -->
+<div id="mob-overlay" onclick="closeMobileMenu()"></div>
 <div id="main">
 
   <!-- TOPBAR -->
   <div id="topbar">
     <div class="topbar-left">
+      <button id="mob-menu-btn" onclick="toggleMobileMenu()" aria-label="Menú">
+        <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
       <div class="topbar-breadcrumb">Dashboard <span>/ Admisión EPG 2026</span></div>
     </div>
     <div class="topbar-right">
@@ -1622,5 +1706,22 @@ window.switchTab = function(id){
 };
 </script>
 
+
+<script>
+// ════════════════════ TOUCH SWIPE ════════════════════════
+(function(){
+  let sx=null;
+  document.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;},{passive:true});
+  document.addEventListener('touchend',function(e){
+    if(sx===null) return;
+    var dx=e.changedTouches[0].clientX-sx;
+    if(Math.abs(dx)>60){
+      if(dx>0&&sx<40) toggleMobileMenu();
+      else if(dx<-60) closeMobileMenu();
+    }
+    sx=null;
+  },{passive:true});
+})();
+</script>
 </body>
 </html>
